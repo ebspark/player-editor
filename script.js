@@ -85,7 +85,6 @@ let multiSelectGroup = null;
 // Player & Item Management
 let selectedPlayer = null;
 window.shopItems = {}; // Global cache for item configurations
-let globalModelFactory; // Instance of PlayerModelFactory
 let previewCache = new Map(); // Caches generated preview models
 
 // UI Components
@@ -414,17 +413,12 @@ function initScene() {
         if (event.key === 'Shift' && !selectionHelper.isDown) controls.enabled = true;
     });
 
-    // --- Lights ---
-    const hemiLight = new THREE.HemisphereLight(
-        0xffffff, // Sky color
-        0x8d8d8d, // Ground color
-        2.0       // Intensity
-    );
-    hemiLight.position.set(0, 50, 0);
-    scene.add(hemiLight);
+const ambientLight = new THREE.AmbientLight(0xffffff, 2.4);
+scene.add(ambientLight);
 
-    const mainLight = new THREE.DirectionalLight(0xffffff, 3.0);
-    mainLight.position.set(5, 10, 7.5);
+
+    const mainLight = new THREE.PointLight(0xffffff, 5.0);
+    mainLight.position.set(0, 1.25, 1);
     mainLight.castShadow = false; 
     scene.add(mainLight);
 
@@ -655,8 +649,8 @@ const jsonControls = document.getElementById('json-controls'); // <-- NEW
 
                     if (isDefaultModel) {
                         // --- SAVE TO GLOBAL FALLBACK ---
-                        if (globalModelFactory && globalModelFactory.globalFallbackAnchors) {
-                            globalModelFactory.globalFallbackAnchors[fullSlotPath] = newOverride;
+                        if (window.globalModelFactory && window.globalModelFactory.globalFallbackAnchors) {
+                            window.globalModelFactory.globalFallbackAnchors[fullSlotPath] = newOverride;
                             console.log(`Saved GLOBAL FALLBACK for ${fullSlotPath}:`, newOverride);
 
                             // Invalidate caches for all items related to this global change
@@ -671,7 +665,7 @@ const jsonControls = document.getElementById('json-controls'); // <-- NEW
                             }
 
                         } else {
-                            console.warn("globalModelFactory not found, cannot save global fallback.");
+                            console.warn("window.globalModelFactory not found, cannot save global fallback.");
                         }
 
                     } else {
@@ -879,7 +873,10 @@ async function spawnDefaultPlayer() {
     userInput: "DefaultPlayer"
   };
 
-  const player = new Player(scene, window.shopItems, defaultConfig);
+  // --- MODIFICATION: Pass window.globalModelFactory ---
+  const player = new Player(scene, window.globalModelFactory, defaultConfig);
+  // --- END MODIFICATION ---
+  
   await player.ready; // Wait for player model to be loaded
 
   selectedPlayer = player;
@@ -897,7 +894,7 @@ async function spawnDefaultPlayer() {
 async function createPreviewCell(parentItemName, parentItemType, childItemName, childItemType, colors, isParentSelected) {
     try {
         // Create parent model
-        const parentAsset = await globalModelFactory.create({
+        const parentAsset = await window.globalModelFactory.create({
             itemName: parentItemName,
             itemType: parentItemType,
             colors: colors
@@ -905,7 +902,7 @@ async function createPreviewCell(parentItemName, parentItemType, childItemName, 
         const parentModel = parentAsset.modelGroup;
 
         // Create child asset (we'll use/clone this)
-        const childAsset = await globalModelFactory.create({
+        const childAsset = await window.globalModelFactory.create({
             itemName: childItemName,
             itemType: childItemType,
             colors: colors
@@ -917,7 +914,7 @@ async function createPreviewCell(parentItemName, parentItemType, childItemName, 
 
         // --- MODIFICATION: Check for dual-slot base types ---
         // Read from global factory's Set
-        if (globalModelFactory.dualSlotBaseTypes.has(childItemType)) {
+        if (window.globalModelFactory.dualSlotBaseTypes.has(childItemType)) {
             // --- DUAL ITEM LOGIC: Attach both Left and Right ---
             
             // 1. Create and attach Left Item
@@ -928,7 +925,7 @@ async function createPreviewCell(parentItemName, parentItemType, childItemName, 
                 parentModel,
                 slotPathLeft,
                 parentConfigWithId,
-                globalModelFactory.globalFallbackAnchors
+                window.globalModelFactory.globalFallbackAnchors
             );
             window.MeshUtils.applyTransform(childModelLeft, transformLeft);
             parentModel.add(childModelLeft);
@@ -941,7 +938,7 @@ async function createPreviewCell(parentItemName, parentItemType, childItemName, 
                 parentModel,
                 slotPathRight,
                 parentConfigWithId,
-                globalModelFactory.globalFallbackAnchors
+                window.globalModelFactory.globalFallbackAnchors
             );
             window.MeshUtils.applyTransform(childModelRight, transformRight);
             parentModel.add(childModelRight);
@@ -974,7 +971,7 @@ async function createPreviewCell(parentItemName, parentItemType, childItemName, 
                 parentModel,
                 slotPath,
                 parentConfigWithId,
-                globalModelFactory.globalFallbackAnchors
+                window.globalModelFactory.globalFallbackAnchors
             );
 
             // Apply transform and attach child to parent
@@ -1129,7 +1126,7 @@ async function createPreviewClickHandler(data, selectedObject) {
         const childBaseType = data.child.type; // e.g., "body/badge"
         
         // Read from global factory's Set
-        if (globalModelFactory.dualSlotBaseTypes.has(childBaseType)) {
+        if (window.globalModelFactory.dualSlotBaseTypes.has(childBaseType)) {
             // Equip both left and right
             await Promise.all([
                 playerToUpdate.equipItem(data.child.name, `${childBaseType}/left`),
@@ -1182,7 +1179,7 @@ const jsonControls = document.getElementById('json-controls'); // <-- NEW
  * @param {THREE.Object3D} selectedObject - The currently selected item.
  */
 async function updateAttachmentPreview(selectedObject) {
-    if (!previewGrid || !globalModelFactory) return; 
+    if (!previewGrid || !window.globalModelFactory) return; 
     
     // Clear preview if nothing is selected
     if (!selectedObject || !selectedObject.userData.isItem) {
@@ -1382,12 +1379,12 @@ function handleAttachmentTypeChange() {
         else finalItemType = `${type}/${side}`; 
     }
 
-    if (globalModelFactory) {
+    if (window.globalModelFactory) {
         // --- MODIFICATION: Check base type for fallbacks/defaults too ---
         // We only care if the BASE type (e.g. "body/badge") is new,
         // not the specific side (e.g. "body/badge/left").
-        const isBaseDefault = globalModelFactory.defaults[type] !== undefined;
-        const isBaseFallback = globalModelFactory.globalFallbackAnchors[type] !== undefined;
+        const isBaseDefault = window.globalModelFactory.defaults[type] !== undefined;
+        const isBaseFallback = window.globalModelFactory.globalFallbackAnchors[type] !== undefined;
         // --- END MODIFICATION ---
 
         if (type && !isBaseDefault && !isBaseFallback) { // <-- Use base type for check
@@ -1439,10 +1436,12 @@ async function setupCustomTypePreview() {
         }
     }
 
-    window.previewMannequin = new Player(scene, window.shopItems, { 
+    // --- MODIFICATION: Pass window.globalModelFactory ---
+    window.previewMannequin = new Player(scene, window.globalModelFactory, { 
         userInput: "__PREVIEW_MANNEQUIN__",
         colors: { primary, secondary }
     });
+    // --- END MODIFICATION ---
     
     await window.previewMannequin.ready;
     window.previewMannequin.root.position.set(2, 0, 0); // Position off to the right
@@ -1469,7 +1468,7 @@ function teardownCustomTypePreview() {
     
     // Clean up temporary fallback
     if (window.tempPreviewFallbackType) {
-        delete globalModelFactory.globalFallbackAnchors[window.tempPreviewFallbackType];
+        delete window.globalModelFactory.globalFallbackAnchors[window.tempPreviewFallbackType];
         window.tempPreviewFallbackType = null;
     }
 }
@@ -1503,7 +1502,7 @@ async function liveUpdateCustomTypePreview() {
         delete window.shopItems[window.tempPreviewItemName];
     }
     if (window.tempPreviewFallbackType) {
-        delete globalModelFactory.globalFallbackAnchors[window.tempPreviewFallbackType];
+        delete window.globalModelFactory.globalFallbackAnchors[window.tempPreviewFallbackType];
     }
 
     // --- 2. Get current form values ---
@@ -1521,7 +1520,7 @@ async function liveUpdateCustomTypePreview() {
     if (!finalItemType) return;
     
     const parentType = finalItemType.split('/')[0];
-    if (!parentType || !globalModelFactory.defaults[parentType]) {
+    if (!parentType || !window.globalModelFactory.defaults[parentType]) {
         console.warn(`Cannot preview: No default item found for parent type "${parentType}"`);
         return;
     }
@@ -1545,7 +1544,7 @@ async function liveUpdateCustomTypePreview() {
         };
         
         // --- 4. Set temporary global fallback ---
-        globalModelFactory.globalFallbackAnchors[finalItemType] = newDefault;
+        window.globalModelFactory.globalFallbackAnchors[finalItemType] = newDefault;
         window.tempPreviewFallbackType = finalItemType;
         
         // --- 5. Register temporary item ---
@@ -1562,7 +1561,7 @@ async function liveUpdateCustomTypePreview() {
         };
 
         // --- 6. Equip items on mannequin ---
-        const defaultParentName = globalModelFactory.defaults[parentType].file;
+        const defaultParentName = window.globalModelFactory.defaults[parentType].file;
         await window.previewMannequin.equipItem(defaultParentName, parentType);
         await window.previewMannequin.equipItem(window.tempPreviewItemName, finalItemType);
         
@@ -1638,21 +1637,21 @@ async function processAndRegisterCosmetic() {
             };
 
             // Save to the global factory instance
-            if (globalModelFactory) {
-                globalModelFactory.globalFallbackAnchors[finalItemType] = newDefault;
+            if (window.globalModelFactory) {
+                window.globalModelFactory.globalFallbackAnchors[finalItemType] = newDefault;
                 console.log(`✅ Saved new global fallback for type "${finalItemType}":`, newDefault);
 
                 // --- MODIFICATION: Add to dualSlotBaseTypes if checked ---
                 const isDualItem = document.getElementById('attachmentDualItem').checked;
                 if (isDualItem) {
                     // Add the BASE type (e.g., "body/new_thing") to the set
-                    globalModelFactory.dualSlotBaseTypes.add(attachmentTypeBase);
+                    window.globalModelFactory.dualSlotBaseTypes.add(attachmentTypeBase);
                     console.log(`✅ Registered "${attachmentTypeBase}" as a new dual-slot item type.`);
                 }
                 // --- END MODIFICATION ---
 
             } else {
-                console.warn('globalModelFactory not found, could not save new fallback position.');
+                console.warn('window.globalModelFactory not found, could not save new fallback position.');
             }
 
         } catch (e) {
@@ -1763,7 +1762,7 @@ window.liveUpdateCustomTypePreview = liveUpdateCustomTypePreview;
   
   // Initialize the factory that builds player models and items
   if (window.PlayerModelFactory) {
-      globalModelFactory = new window.PlayerModelFactory(window.shopItems);
+window.globalModelFactory = new window.PlayerModelFactory(window.shopItems);
   } else {
       console.error("PlayerModelFactory not found on window!");
   }

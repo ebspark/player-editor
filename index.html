@@ -21,50 +21,32 @@
         </div>
 
         <div class="dropdown">
-            <button class="dropbtn">Add</button>
-            <div class="dropdown-content">
-                <button onclick="createPlayer()">Create New Player</button>
-                <button onclick="addLevel()">Add Level</button>
+            <button class="dropbtn">Create</button> <div class="dropdown-content">
+                <button onclick="createPlayer()">New Player</button> <button onclick="addLevel()">Add Level</button>
                 <button onclick="addExistingPlayer()">Add Existing Player</button>
-                <button onclick="addItem()">Add Item</button>
-                <button onclick="openCosmeticUploader()">Upload New Cosmetic</button>
-                <button onclick="openBatchUploader()">Upload Batch Cosmetics</button>
-            </div>
+                <button onclick="addItem()">Add Item from Library...</button> </div>
         </div>
 
         <div class="dropdown">
-            <button class="dropbtn">Import</button>
-            <div class="dropdown-content">
-                <button onclick="document.getElementById('sgm-file-input').click()">Import .sgm</button>
-                <input type="file" id="sgm-file-input" accept=".sgm" style="display:none;"
-                    onchange="handleFileSelection(event)" />
-
-                <button onclick="document.getElementById('glb-file-input').click()">Import .glb</button>
-                <input type="file" id="glb-file-input" accept=".glb" style="display:none;"
-                    onchange="handleFileSelection(event)" />
-
-                <button onclick="document.getElementById('obj-file-input').click()">Import .obj</button>
-                <input type="file" id="obj-file-input" accept=".obj" style="display:none;"
-                    onchange="handleFileSelection(event)" />
+            <button class="dropbtn">Import</button> <div class="dropdown-content">
+                <button onclick="document.getElementById('generic-model-input').click()">Import Generic Model...</button>
+                <button onclick="openCosmeticUploader()">Upload New Cosmetic...</button>
+                <button onclick="openBatchUploader()">Upload Batch Cosmetics...</button>
             </div>
         </div>
 
+        <input type="file" id="generic-model-input" accept=".sgm,.glb,.gltf,.obj" style="display:none;"
+            onchange="handleFileSelection(event)" />
         <div class="dropdown">
-            <button class="dropbtn">Settings</button>
-            <div class="dropdown-content">
+            <button class="dropbtn">Help</button> <div class="dropdown-content">
                 <div class="dropdown">
-                    <button class="dropbtn">Thanks!</button>
-                    <div class="dropdown-content">
+                    <button class="dropbtn">Credits</button> <div class="dropdown-content">
                         <span>Index</span>
                         <span>Slin</span>
                         <span>Vestria</span>
                     </div>
                 </div>
             </div>
-        </div>
-
-        <div class="dropdown">
-            <button class="dropbtn" onclick="somefuntion()">placeholder</button>
         </div>
 
         <button id="editPlayerBtn" class="dropbtn" style="display: none; background-color: #55aaff;"
@@ -212,7 +194,6 @@
                 </select>
             </div>
 
-            <!-- MODIFICATION: Added oninput events to all inputs -->
             <div id="customTypeSetup" class="form-group"
                 style="display: none; background: #333; padding: 10px; border-radius: 6px;">
                 <label style="color: #55aaff; font-weight: bold;">New Attachment Type Setup (Live Preview)</label>
@@ -243,8 +224,6 @@
                 <input type="number" id="customTypeScale" class="form-control" value="1"
                     oninput="liveUpdateCustomTypePreview()">
             </div>
-            <!-- END MODIFICATION -->
-
             <div class="form-group">
                 <label>Model Name:</label>
                 <input type="text" id="modelName" class="form-control" placeholder="Auto-generated name">

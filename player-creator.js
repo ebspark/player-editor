@@ -103,7 +103,7 @@ const playerCreator = {
         this.primaryColorInput.value = '#' + config.colors.primary.getHexString();
         this.secondaryColorInput.value = '#' + config.colors.secondary.getHexString();
 
-        this.previewPlayer = new Player(this.previewScene, window.shopItems, config);
+        this.previewPlayer = new Player(this.previewScene, window.globalModelFactory, config);
         await this.previewPlayer.ready;
 
         if (this.itemGrid.getModelCount() === 0) {
@@ -380,7 +380,7 @@ const playerCreator = {
             })();
         } else {
             
-            let player = new Player(scene, window.shopItems, finalConfig);
+            let player = new Player(scene, window.globalModelFactory, finalConfig);
             await player.ready;
             transformControls.attach(player.root);
         }
