@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Smarter Snake AI</title>
+  <style>
+    body {
+      background: #111;
+      color: white;
+      text-align: center;
+      font-family: sans-serif;
+    }
+    canvas {
+      background: #222;
+      border: 2px solid #444;
+    }
+    label {
+      margin-top: 10px;
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <h2>🧠 Smarter Snake AI — With Elimination</h2>
+  <canvas id="game" width="400" height="400"></canvas>
+
+  <label>
+    Game Speed:
+    <input type="range" id="speedSlider" min="30" max="1000" value="200">
+    <span id="speedValue">200ms</span>
+  </label>
+
+  <script>
+    const canvas = document.getElementById("game");
+    const ctx = canvas.getContext("2d");
+
+    const cols = 20;
+    const rows = 20;
+    const cellSize = canvas.width / cols;
+
+    let snake = [{ x: 5, y: 5 }];
+    let fruit = spawnFruit();
+    let direction = { x: 0, y: 1 };
+    let intervalId;
+    let speed = parseInt(document.getElementById("speedSlider").value);
+
+    const DIRS = [
+      { name: "up",    x: 0,  y: -1 },
+      { name: "down",  x: 0,  y: 1 },
+      { name: "left",  x: -1, y: 0 },
+      { name: "right", x: 1,  y: 0 },
+    ];
+
+    let badDirs = {};  // { dirName: cooldown }
+    const cooldownDuration = 10;
+
+    document.getElementById("speedSlider").oninput = (e) => {
+      speed = parseInt(e.target.value);
+      document.getElementById("speedValue").textContent = speed + "ms";
+      restartGameLoop();
+    };
+
+    function spawnFruit() {
+      let fx, fy, occupied;
+      do {
+        fx = Math.floor(Math.random() * cols);
+        fy = Math.floor(Math.random() * rows);
+        occupied = snake.some(p => p.x === fx && p.y === fy);
+      } while (occupied);
+      return { x: fx, y: fy };
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = "crimson";
+      ctx.fillRect(fruit.x * cellSize, fruit.y * cellSize, cellSize, cellSize);
+
+      ctx.fillStyle = "limegreen";
+      for (let part of snake) {
+        ctx.fillRect(part.x * cellSize, part.y * cellSize, cellSize, cellSize);
+      }
+    }
+
+    function getDistance(a, b) {
+      return Math.abs(a.x - b.x) + Math.abs(a.y - b.y);
+    }
+
+    function trySmartMove() {
+      const head = snake[0];
+      const currentDist = getDistance(head, fruit);
+
+      let bestDir = null;
+      let bestDist = currentDist;
+
+      // Decrease cooldowns
+      for (let key in badDirs) {
+        badDirs[key]--;
+        if (badDirs[key] <= 0) delete badDirs[key];
+      }
+
+      for (let dir of DIRS) {
+        if (badDirs[dir.name]) continue; // skip banned
+
+        const trial = { x: head.x + dir.x, y: head.y + dir.y };
+
+        // Wall or self-collision?
+        const hitWall = trial.x < 0 || trial.x >= cols || trial.y < 0 || trial.y >= rows;
+        const hitSelf = snake.some(p => p.x === trial.x && p.y === trial.y);
+
+        if (hitWall || hitSelf) {
+          // ❄️ Bad move → eliminate temporarily
+          badDirs[dir.name] = cooldownDuration;
+          continue;
+        }
+
+        const trialDist = getDistance(trial, fruit);
+        if (trialDist < bestDist) {
+          bestDist = trialDist;
+          bestDir = dir;
+        }
+      }
+
+      // If nothing better found, fallback to current direction
+      if (bestDir) direction = { x: bestDir.x, y: bestDir.y };
+    }
+
+    function updateGame() {
+      trySmartMove();
+
+      const newHead = {
+        x: snake[0].x + direction.x,
+        y: snake[0].y + direction.y,
+      };
+
+      if (
+        newHead.x < 0 || newHead.x >= cols ||
+        newHead.y < 0 || newHead.y >= rows ||
+        snake.some(p => p.x === newHead.x && p.y === newHead.y)
+      ) {
+        clearInterval(intervalId);
+        alert("💀 Game Over!");
+        return;
+      }
+
+      snake.unshift(newHead);
+
+      if (newHead.x === fruit.x && newHead.y === fruit.y) {
+        fruit = spawnFruit();
+      } else {
+        snake.pop();
+      }
+
+      draw();
+    }
+
+    function restartGameLoop() {
+      clearInterval(intervalId);
+      intervalId = setInterval(updateGame, speed);
+    }
+
+    draw();
+    restartGameLoop();
+  </script>
+</body>
+</html>
