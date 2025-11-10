@@ -112,7 +112,25 @@ export const MeshUtils = {
   halfColor(color) {
     return color.clone().multiplyScalar(0.5);
   },
+getSlotPath(childType, childConfig) {
+    const typeParts = childType.split('/');
+    let slotPath;
 
+    if (childType.startsWith('grapple/hook/')) {
+        const side = typeParts.pop();
+        slotPath = `rope/${side}/end`;
+    } else if (childType === 'checkpoint') {
+        slotPath = 'checkpoint'; // Special case
+    } else {
+        const parentType = typeParts[0];
+        const sub = typeParts.slice(1).join('/');
+        slotPath = `${parentType}/${sub}`; // e.g. 'head/hat', 'body/badge/left'
+        if (childConfig && childConfig.attachment_point) {
+            slotPath = `${parentType}/${typeParts[1]}/${childConfig.attachment_point}`; // e.g. 'head/glasses/mouth'
+        }
+    }
+    return slotPath;
+  },
   // Create empty Objects as sockets for editor visualization
   createAttachmentSockets(modelGroup, itemConfig) {
     if (!itemConfig || !itemConfig.attachment_points) return;
@@ -132,20 +150,29 @@ export const MeshUtils = {
       }
       return cur;
     };
+    
 
-    const walk = (prefix, node) => {
-      Object.entries(node).forEach(([key, val]) => {
-        const full = prefix ? `${prefix}/${key}` : key;
-        if (val && typeof val === 'object' && (val.position || val.rotation || val.scale)) {
-          const socket = ensurePath(modelGroup, full);
-          this.applyTransform(socket, val);
-        } else if (val && typeof val === 'object') {
-          walk(full, val);
+    // --- MODIFICATION: This logic now handles flat keys like "glasses/mouth" ---
+    // The attachment_points object is flat, so we iterate its keys directly.
+    Object.entries(itemConfig.attachment_points).forEach(([key, val]) => {
+      // key is "hat", "glasses", or "glasses/mouth"
+      if (val && typeof val === 'object' && (val.position || val.rotation || val.scale)) {
+        
+        // We won't use ensurePath as it creates nested objects (e.g., glasses > mouth)
+        // We will create a single socket object with the flat key as its name.
+        let socket = modelGroup.children.find(c => c.name === key && c.userData && c.userData.isSocket);
+        if (!socket) {
+            socket = new THREE.Object3D();
+            socket.name = key; // name is "hat" or "glasses/mouth"
+            socket.userData.isSocket = true;
+            modelGroup.add(socket);
         }
-      });
-    };
-
-    walk('', itemConfig.attachment_points);
+        // Apply the transform to this single socket
+        this.applyTransform(socket, val);
+      }
+      // We don't need a recursive 'walk' or 'else if' because attachment_points is flat.
+    });
+    // --- END MODIFICATION ---
   },
 
   /**
@@ -166,7 +193,7 @@ export const MeshUtils = {
   }) {
     const pick = (obj) => (obj && typeof obj === 'object' ? obj : null);
 
-    // Extract the slot name from the path (e.g., "hat" from "head/hat")
+    // Extract the slot name from the path (e.g., "hat", "glasses/mouth")
     const getSlotName = (path) => {
       const parts = path.split('/');
       return parts.slice(1).join('/'); // Remove first part (parent type)
@@ -181,19 +208,15 @@ export const MeshUtils = {
     // --- 2) From parent's attachment_points
     const getFromParentAnchors = () => {
       if (!parentConfig || !parentConfig.attachment_points) return null;
-      const slotName = getSlotName(slotPath);
+      const slotName = getSlotName(slotPath); // slotName will be "glasses/mouth"
       if (!slotName) return null;
 
-      // Navigate through nested structure (e.g., "glasses/mouth")
-      const parts = slotName.split('/');
-      let current = parentConfig.attachment_points;
-
-      for (const part of parts) {
-        if (!current || typeof current !== 'object') return null;
-        current = current[part];
-      }
-
-      return pick(current);
+      // --- MODIFICATION ---
+      // The attachment_points object is flat, not nested.
+      // Look up the full slotName directly.
+      const attachmentData = parentConfig.attachment_points[slotName];
+      return pick(attachmentData);
+      // --- END MODIFICATION ---
     };
 
     // --- 3) From global fallback JSON

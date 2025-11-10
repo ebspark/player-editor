@@ -100,12 +100,6 @@
             </svg>
         </button>
 
-        <button id="attachmentModeBtn" onclick="toggleAttachmentMode()"
-            title="Toggle Attachment Mode (Child Override / Parent Default)"
-            style="display: none; font-weight: bold; color: #55ff55;">
-            CHILD
-        </button>
-
         <button onclick="deselectObject()" title="Deselect">
             <svg viewBox="0 0 24 24">
                 <path d="M21 3L3 21M3 3l18 18" />
@@ -176,27 +170,80 @@
             <h2>Attachment Setup</h2>
             <div class="form-group">
                 <label>Attachment Type:</label>
-                <select id="attachmentType" class="form-control">
-                    <option value="head/hat">Head/Hat</option>
-                    <option value="head/glasses">Head/Glasses</option>
-                    <option value="body">Body</option>
-                    <option value="body/neck">Body/Neck</option>
-                    <option value="body/backpack">Body/Backpack</option>
-                    <option value="hand">Hand</option>
-                    <option value="checkpoint">Checkpoint</option>
-                    <option value="grapple/hook">Grapple/Hook</option>
-                    <option value="body/badge">Body/Badge</option>
-                </select>
+                <input type="text" id="attachmentTypeInput" list="attachmentTypesList" class="form-control"
+                    placeholder="e.g., head/hat or body/jetpack" oninput="handleAttachmentTypeChange()">
+
+                <datalist id="attachmentTypesList">
+                    <option value="head/hat"></option>
+                    <option value="head/glasses"></option>
+                    <option value="head/glasses/mouth"></option>
+                    <option value="body/neck"></option>
+                    <option value="body/neck/chest"></option>
+                    <option value="body/backpack"></option>
+                    <option value="body/badge"></option>
+                    <option value="checkpoint"></option>
+                    <option value="grapple/hook"></option>
+                    <option value="head"></option>
+                    <option value="body"></option>
+                    <option value="hand"></option>
+                </datalist>
+            </div>
+            <div class="form-group">
+                <label>Attachment Point (Optional):</label>
+                <input type="text" id="attachmentPointInput" class="form-control"
+                    placeholder="e.g., mouth (for head/glasses)" oninput="liveUpdateCustomTypePreview()">
+            </div>
+            <div id="dualItemSelection" class="form-group" style="display: none; background: #3a3a3a; padding: 10px; border-radius: 6px;">
+                <label for="attachmentDualItem" style="display: flex; align-items: center; cursor: pointer;">
+                    <input type="checkbox" id="attachmentDualItem" onchange="handleAttachmentTypeChange()" style="width: 20px; height: 20px; margin-right: 10px;">
+                    Is this a "Dual Item"? (e.g., Badge)
+                </label>
+                <p style="font-size: 12px; color: #ccc; margin-top: 5px;">
+                    Check this if the item can be equipped to a 'left' OR 'right' slot (like body/badge). Do not check for 'hand' items.
+                </p>
             </div>
 
             <div id="sideSelection" class="form-group" style="display: none;">
                 <label>Side:</label>
-                <select id="attachmentSide" class="form-control">
+                <select id="attachmentSide" class="form-control" onchange="handleAttachmentTypeChange()">
                     <option value="none">-- none -- </option>
                     <option value="left">Left</option>
                     <option value="right">Right</option>
                 </select>
             </div>
+
+            <!-- MODIFICATION: Added oninput events to all inputs -->
+            <div id="customTypeSetup" class="form-group"
+                style="display: none; background: #333; padding: 10px; border-radius: 6px;">
+                <label style="color: #55aaff; font-weight: bold;">New Attachment Type Setup (Live Preview)</label>
+                <p style="font-size: 12px; color: #ccc; margin-bottom: 10px;">A preview mannequin will appear. Tweak
+                    values to position the item.</p>
+
+                <label style="font-size: 13px; margin-top: 5px;">Position (X, Y, Z)</label>
+                <div style="display: flex; gap: 5px;">
+                    <input type="number" id="customTypePosX" class="form-control" value="0"
+                        oninput="liveUpdateCustomTypePreview()">
+                    <input type="number" id="customTypePosY" class="form-control" value="0"
+                        oninput="liveUpdateCustomTypePreview()">
+                    <input type="number" id="customTypePosZ" class="form-control" value="0"
+                        oninput="liveUpdateCustomTypePreview()">
+                </div>
+
+                <label style="font-size: 13px; margin-top: 5px;">Rotation (Y, X, Z - Yaw, Pitch, Roll)</label>
+                <div style="display: flex; gap: 5px;">
+                    <input type="number" id="customTypeRotY" class="form-control" value="0"
+                        oninput="liveUpdateCustomTypePreview()">
+                    <input type="number" id="customTypeRotX" class="form-control" value="0"
+                        oninput="liveUpdateCustomTypePreview()">
+                    <input type="number" id="customTypeRotZ" class="form-control" value="0"
+                        oninput="liveUpdateCustomTypePreview()">
+                </div>
+
+                <label style="font-size: 13px; margin-top: 5px;">Scale</label>
+                <input type="number" id="customTypeScale" class="form-control" value="1"
+                    oninput="liveUpdateCustomTypePreview()">
+            </div>
+            <!-- END MODIFICATION -->
 
             <div class="form-group">
                 <label>Model Name:</label>
@@ -233,6 +280,16 @@
         <div class="json-panel">
             <div id="json-resize"></div>
             <div class="json-header">JSON Data / Properties</div>
+
+            <div id="json-controls"
+                style="padding: 8px 16px; background: #232323; border-bottom: 1px solid #333; display: none;">
+                <button id="jsonAttachmentModeToggle" onclick="toggleAttachmentMode()"
+                    title="Toggle which attachment config to edit (Key: 5)" class="nav-button"
+                    style="width: 100%; display: block; text-align: center; background-color: #333; color: #55ff55; font-weight: bold;">
+                    Attachment Point Overrides
+                </button>
+            </div>
+
             <div class="json-editor" id="jsonEditor"></div>
         </div>
     </div>

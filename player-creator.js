@@ -16,7 +16,7 @@ const playerCreator = {
     targetPlayer: null,
     isInitialized: false,
     modelCache: {},
-    dualSlotBaseTypes: ['body/badge', 'grapple/hook'],
+    // dualSlotBaseTypes: ['body/badge', 'grapple/hook'], // <-- REMOVED
 
     init() {
         if (this.isInitialized) return;
@@ -214,7 +214,8 @@ const playerCreator = {
     _setupGridItemControls(gridItemEl, itemData) {
         gridItemEl.classList.remove('has-controls');
 
-        if (this.dualSlotBaseTypes.includes(itemData.type)) {
+        // --- MODIFICATION: Read from global factory's Set ---
+        if (window.globalModelFactory && window.globalModelFactory.dualSlotBaseTypes.has(itemData.type)) {
             gridItemEl.classList.add('has-controls');
 
             const controlsDiv = document.createElement('div');
@@ -279,7 +280,8 @@ const playerCreator = {
 
             itemEl.classList.remove('equipped');
 
-            if (this.dualSlotBaseTypes.includes(itemType)) {
+            // --- MODIFICATION: Read from global factory's Set ---
+            if (window.globalModelFactory && window.globalModelFactory.dualSlotBaseTypes.has(itemType)) {
                 const leftBtn = itemEl.querySelector('button[data-slot="left"]');
                 const rightBtn = itemEl.querySelector('button[data-slot="right"]');
                 let isEquippedLeft = false;
@@ -382,6 +384,8 @@ const playerCreator = {
             await player.ready;
             transformControls.attach(player.root);
         }
+
+
 
         this.close();
     },

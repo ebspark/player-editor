@@ -11,7 +11,7 @@ import { MeshUtils } from './MeshUtils.js';
 class PlayerModelFactory {
   constructor(itemsList, globalFallbackAnchors = {}) {
     this.itemsList = itemsList;
-
+this.dualSlotBaseTypes = new Set(['body/badge', 'grapple/hook']);
     // Global JSON fallbacks (migrated from C++)
     this.globalFallbackAnchors = {
       'head/hat': { position: [0.0, 0.190766, 0.0] },
