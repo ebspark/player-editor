@@ -2,7 +2,6 @@
     margin: 0;
     padding: 0;
     box-sizing: border-box;
-    font-family: system-ui, -apple-system, sans-serif;
 }
 
 #json-editor {
@@ -20,241 +19,243 @@
 }
 
 
-   body {
-            background-color: #141414;
-            height: 100vh;
-            overflow: hidden;
-        }
+body {
+    background-color: #141414;
+    height: 100vh;
+    overflow: hidden;
+    font-family: system-ui, -apple-system, sans-serif;
 
-        /* 1. TOP NAVBAR */
-        .navbar {
-            position: fixed;
-            top: 0;
-            width: 100%;
-            background-color: #1a1a1a;
-            border-bottom: 1px solid #333;
-            z-index: 10;
-            display: flex;
-            align-items: center;
-            padding: 0 15px;
-            gap: 20px;
-        }
+}
 
-        .nav-button {
-            background: none;
-            border: none;
-            padding: 10px 15px;
-            font-size: 14px;
-            cursor: pointer;
-            transition: background-color 0.2s;
-            border-radius: 4px;
-        }
+/* 1. TOP NAVBAR */
+.navbar {
+    position: fixed;
+    top: 0;
+    width: 100%;
+    background-color: #1a1a1a;
+    border-bottom: 1px solid #333;
+    z-index: 10;
+    display: flex;
+    align-items: center;
+    padding: 0 15px;
+    gap: 20px;
+}
 
-        .nav-button:hover {
-            background-color: #333;
-        }
+.nav-button {
+    background: none;
+    border: none;
+    padding: 10px 15px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 0.2s;
+    border-radius: 4px;
+}
 
-        /* Main Container Layout */
-        .main-container {
-            position: fixed;
-            top: 50px;
-            left: 0;
-            width: 100%;
-            height: calc(100vh - 50px);
-            display: flex;  
-        }
+.nav-button:hover {
+    background-color: #333;
+}
 
-        /* 2. MAIN VIEWPORT (Simulated 3D Area) */
-        #viewport {
-            flex: 1;
-            background-image: linear-gradient(to right, #242424 1px, transparent 1px),
-                              linear-gradient(to bottom, #242424 1px, transparent 1px);
-            background-size: 50px 50px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-        }
+/* Main Container Layout */
+.main-container {
+    position: fixed;
+    top: 50px;
+    left: 0;
+    width: 100%;
+    height: calc(100vh - 50px);
+    display: flex;
+}
 
-        /* 3. JSON PANEL */
-        .json-panel {
-            width: 400px;
-            background: #1e1e1e;
-            border-left: 1px solid #333;
-            display: flex;
-            flex-direction: column;
-            overflow: hidden;
-        }
+/* 2. MAIN VIEWPORT (Simulated 3D Area) */
+#viewport {
+    flex: 1;
+    background-image: linear-gradient(to right, #242424 1px, transparent 1px),
+        linear-gradient(to bottom, #242424 1px, transparent 1px);
+    background-size: 50px 50px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+}
 
-        .json-header {
-            padding: 12px 16px;
-            background: #232323;
-            border-bottom: 1px solid #333;
-            font-size: 13px;
-            font-weight: 500;
-            color: #9aa5ce;
-            letter-spacing: 0.3px;
-        }
+/* 3. JSON PANEL */
+.json-panel {
+    width: 400px;
+    background: #1e1e1e;
+    border-left: 1px solid #333;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
 
-        .json-editor {
-            flex: 1;
-            overflow-y: auto;
-            font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-            font-size: 13px;
-            line-height: 1.6;
-        }
+.json-header {
+    padding: 12px 16px;
+    background: #232323;
+    border-bottom: 1px solid #333;
+    font-size: 13px;
+    font-weight: 500;
+    color: #9aa5ce;
+    letter-spacing: 0.3px;
+}
 
-        /* JSON Syntax Highlighting */
-        .json-line {
-            display: flex;
-            padding: 2px 0;
-        }
+.json-editor {
+    flex: 1;
+    overflow-y: auto;
+    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+    font-size: 13px;
+    line-height: 1.6;
+}
 
-        .json-indent {
-            display: inline-block;
-            width: 20px;
-        }
+/* JSON Syntax Highlighting */
+.json-line {
+    display: flex;
+    padding: 2px 0;
+}
 
-        .json-key {
-            color: #9cdcfe;
-        }
+.json-indent {
+    display: inline-block;
+    width: 20px;
+}
 
-        .json-string {
-            color: #ce9178;
-        }
+.json-key {
+    color: #9cdcfe;
+}
 
-        .json-number {
-            color: #b5cea8;
-        }
+.json-string {
+    color: #ce9178;
+}
 
-        .json-boolean {
-            color: #569cd6;
-        }
+.json-number {
+    color: #b5cea8;
+}
 
-        .json-bracket {
-            color: #ffd700;
-        }
+.json-boolean {
+    color: #569cd6;
+}
 
-        .json-punctuation {
-            color: #d4d4d4;
-        }
+.json-bracket {
+    color: #ffd700;
+}
 
-        .json-comment {
-            color: #6a9955;
-            font-style: italic;
-        }
+.json-punctuation {
+    color: #d4d4d4;
+}
 
-        /* Editable JSON field */
-        .json-value-editable {
-            background: transparent;
-            border: 1px solid transparent;
-            padding: 2px 4px;
-            border-radius: 3px;
-            outline: none;
-            transition: all 0.2s;
-        }
+.json-comment {
+    color: #6a9955;
+    font-style: italic;
+}
 
-        .json-value-editable:hover {
-            background: #2d2d30;
-            border-color: #3e3e42;
-        }
+/* Editable JSON field */
+.json-value-editable {
+    background: transparent;
+    border: 1px solid transparent;
+    padding: 2px 4px;
+    border-radius: 3px;
+    outline: none;
+    transition: all 0.2s;
+}
 
-        .json-value-editable:focus {
-            background: #1e1e1e;
-            border-color: #007acc;
-        }
+.json-value-editable:hover {
+    background: #2d2d30;
+    border-color: #3e3e42;
+}
 
-        /* Scrollbar styling */
-        .json-editor::-webkit-scrollbar {
-            width: 10px;
-        }
+.json-value-editable:focus {
+    background: #1e1e1e;
+    border-color: #007acc;
+}
 
-        .json-editor::-webkit-scrollbar-track {
-            background: #1e1e1e;
-        }
+/* Scrollbar styling */
+.json-editor::-webkit-scrollbar {
+    width: 10px;
+}
 
-        .json-editor::-webkit-scrollbar-thumb {
-            background: #424242;
-            border-radius: 5px;
-        }
+.json-editor::-webkit-scrollbar-track {
+    background: #1e1e1e;
+}
 
-        .json-editor::-webkit-scrollbar-thumb:hover {
-            background: #4e4e4e;
-        }
+.json-editor::-webkit-scrollbar-thumb {
+    background: #424242;
+    border-radius: 5px;
+}
 
-        /* 4. LEFT TOOLS PANEL */
-        .tools-panel {
-            position: fixed;
-            top: 100px;
-            left: 10px;
-            z-index: 11;
-            background: #1a1a1a;
-            padding: 8px;
-            border-radius: 8px;
-            display: flex;
-            flex-direction: column;
-            gap: 4px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-            border: 1px solid #333;
-        }
+.json-editor::-webkit-scrollbar-thumb:hover {
+    background: #4e4e4e;
+}
 
-        .tool-button {
-            width: 40px;
-            height: 40px;
-            background: #262626;
-            border: 1px solid #333;
-            border-radius: 6px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+/* 4. LEFT TOOLS PANEL */
+.tools-panel {
+    position: fixed;
+    top: 100px;
+    left: 10px;
+    z-index: 11;
+    background: #1a1a1a;
+    padding: 8px;
+    border-radius: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    border: 1px solid #333;
+}
 
-        .tool-button:hover {
-            background: #333;
-        }
-        
-        .tool-button span {
-            font-size: 18px;
-            color: #55aaff;
-            font-weight: bold;
-        }
+.tool-button {
+    width: 40px;
+    height: 40px;
+    background: #262626;
+    border: 1px solid #333;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
 
-        /* 5. BOTTOM-RIGHT STATISTICS PANEL */
-        .stats-panel {
-            position: fixed;
-            bottom: 10px;
-            right: 420px;
-            background: #242424;
-            padding: 12px 15px;
-            font-size: 13px;
-            border-radius: 8px;
-            border: 1px solid #333;
-            z-index: 11;
-            width: 200px;
-        }
+.tool-button:hover {
+    background: #333;
+}
 
-        .stats-panel h4 {
-            color: #55aaff;
-            font-size: 14px;
-            margin-bottom: 8px;
-        }
+.tool-button span {
+    font-size: 18px;
+    color: #55aaff;
+    font-weight: bold;
+}
 
-        .stat-item {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 4px;
-        }
+/* 5. BOTTOM-RIGHT STATISTICS PANEL */
+.stats-panel {
+    position: fixed;
+    bottom: 10px;
+    right: 420px;
+    background: #242424;
+    padding: 12px 15px;
+    font-size: 13px;
+    border-radius: 8px;
+    border: 1px solid #333;
+    z-index: 11;
+    width: 200px;
+}
 
-        .stat-label {
-            color: #a1a1a1;
-        }
+.stats-panel h4 {
+    color: #55aaff;
+    font-size: 14px;
+    margin-bottom: 8px;
+}
 
-        .stat-value {
-            font-family: monospace;
-            color: #e1e1e1;
-            font-weight: bold;
-        }
+.stat-item {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 4px;
+}
+
+.stat-label {
+    color: #a1a1a1;
+}
+
+.stat-value {
+    font-family: monospace;
+    color: #e1e1e1;
+    font-weight: bold;
+}
 
 
 
@@ -351,12 +352,15 @@
 }
 
 #canvas-container {
- flex: 1; /* Add this to take up available space */
+    flex: 1;
+    /* Add this to take up available space */
     /* width: auto; REMOVE THIS (flex handles it) */
     /* height: calc(100vh - 50px); REMOVE THIS (main-container height handles it) */
     background-color: #141414;
-    position: relative; /* Set to relative for the canvas element inside */
-    min-width: 0; /* Prevents flex overflow */
+    position: relative;
+    /* Set to relative for the canvas element inside */
+    min-width: 0;
+    /* Prevents flex overflow */
 }
 
 .tools {
@@ -462,6 +466,7 @@
     outline: none;
     transition: border-color 0.2s ease;
 }
+
 .model-loading-spinner {
     width: 30px;
     height: 30px;
@@ -795,7 +800,7 @@
     font-weight: 500;
 }
 
-.player-controls > div:first-of-type {
+.player-controls>div:first-of-type {
     background: rgba(255, 255, 255, 0.03);
     padding: 15px;
     border-radius: 8px;
@@ -905,8 +910,10 @@
     flex-direction: column;
     gap: 15px;
     border-left: 2px solid #444;
-      position: relative; /* Necessary for z-index to work */
-    z-index: 10;        /* This is the key: it lifts the panel on top */
+    position: relative;
+    /* Necessary for z-index to work */
+    z-index: 10;
+    /* This is the key: it lifts the panel on top */
 }
 
 #ae-panel h2 {
@@ -962,35 +969,39 @@
 
 /* Attachment Editor Preview Bar Styles */
 #ae-preview-bar {
-  position: absolute;
-  bottom: 0;
-  right: 0;
-  width: 425px;
-  height: 150px;
-  background-color: rgba(30, 30, 30, 0.85);
-  backdrop-filter: blur(4px);
-  border-top: 1px solid #444;
-  box-sizing: border-box;
-  z-index: 10;
-  padding: 10px;
-  border-radius: 10px 0 0 0;
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    width: 425px;
+    height: 150px;
+    background-color: rgba(30, 30, 30, 0.85);
+    backdrop-filter: blur(4px);
+    border-top: 1px solid #444;
+    box-sizing: border-box;
+    z-index: 10;
+    padding: 10px;
+    border-radius: 10px 0 0 0;
 }
 
 #ae-preview-bar.model-grid-container {
-        overflow-x: scroll;
-        overflow-y: hidden;
+    overflow-x: scroll;
+    overflow-y: hidden;
 }
 
 #ae-preview-bar .model-grid {
-    display: grid; /* Use grid instead of flex */
-    grid-auto-flow: column; /* Arrange items in a single horizontal line */
-    grid-auto-columns: 100px; /* Each column is 100px wide */
+    display: grid;
+    /* Use grid instead of flex */
+    grid-auto-flow: column;
+    /* Arrange items in a single horizontal line */
+    grid-auto-columns: 100px;
+    /* Each column is 100px wide */
     height: 100%;
     gap: 10px;
 }
 
 #ae-preview-bar .model-grid-item {
-    flex-shrink: 0; /* Prevent items from shrinking */
+    flex-shrink: 0;
+    /* Prevent items from shrinking */
     border: 2px solid #555;
     background-color: rgba(255, 255, 255, 0.03);
     transition: border-color 0.2s ease;
@@ -1001,12 +1012,14 @@
 }
 
 #ae-preview-bar .model-grid-item.selected {
-    border-color: #55aaff; /* Highlight color for selected item */
+    border-color: #55aaff;
+    /* Highlight color for selected item */
     box-shadow: 0 0 10px rgba(85, 170, 255, 0.5);
 }
 
 #ae-preview-bar .model-info {
-    font-size: 10px; /* Smaller text for the compact view */
+    font-size: 10px;
+    /* Smaller text for the compact view */
     background: rgba(0, 0, 0, 0.7);
     padding: 2px 6px;
 }
@@ -1041,14 +1054,16 @@
 .model-grid-canvas {
     position: absolute;
     pointer-events: none;
-    z-index: 1 !important; /* Canvas should be ON TOP to render into grid items */
+    z-index: 1 !important;
+    /* Canvas should be ON TOP to render into grid items */
 }
 
 .model-grid {
     display: grid;
     padding: 10px;
     position: relative;
-    z-index: 0; /* Grid items below canvas */
+    z-index: 0;
+    /* Grid items below canvas */
 }
 
 .model-grid-item {
@@ -1062,5 +1077,6 @@
     justify-content: space-between;
     align-items: center;
     padding: 5px;
-    position: relative; /* Important for stacking context */
+    position: relative;
+    /* Important for stacking context */
 }

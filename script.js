@@ -381,10 +381,10 @@ function initScene() {
                 vec4 neighborW = texture2D(tSelectionMask, vUv - vec2(texelSize.x, 0.0));
 
                 // If neighbor color is different, this is an edge
-                if (distance(ownMaskColor, neighborN) > 0.001) isEdge = 1.0;
-                if (distance(ownMaskColor, neighborS) > 0.001) isEdge = 1.0;
-                if (distance(ownMaskColor, neighborE) > 0.001) isEdge = 1.0;
-                if (distance(ownMaskColor, neighborW) > 0.001) isEdge = 1.0;
+                if (distance(ownMaskColor, neighborN) > 0.1) isEdge = 1.0;
+                if (distance(ownMaskColor, neighborS) > 0.1) isEdge = 1.0;
+                if (distance(ownMaskColor, neighborE) > 0.1) isEdge = 1.0;
+                if (distance(ownMaskColor, neighborW) > 0.1) isEdge = 1.0;
 
                 if (isEdge > 0.5) {
                     gl_FragColor = vec4(uOutlineColor, 1.0); // Draw outline

@@ -295,6 +295,7 @@ require(["vs/editor/editor.main"], function () {
     base: 'vs-dark',
     inherit: true,
     rules: [],
+    fontFamily: 'monospace',
     colors: {
       'editor.background': '#1a1a1a',
       'editorLineNumber.foreground': '#1a1a1a',
@@ -310,6 +311,7 @@ require(["vs/editor/editor.main"], function () {
     theme: "custom-dark",
     automaticLayout: true,
     minimap: { enabled: false },
+    fontFamily: 'monospace',
     lineNumbers: "off",
     glyphMargin: false,
     lineDecorationsWidth: 10,
