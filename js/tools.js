@@ -72,6 +72,12 @@ document.addEventListener('keydown', (event) => {
         case '4':
             window.deselectObject();
             break;
+        // --- MODIFICATION: STOP 'Delete' key from triggering deselect ---
+        case 'Delete':
+        case 'Backspace':
+            event.stopPropagation();
+            break;
+        // --- END MODIFICATION ---
         case '5': 
             if (typeof window.toggleAttachmentMode === 'function') {
                 window.toggleAttachmentMode();

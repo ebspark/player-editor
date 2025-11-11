@@ -158,19 +158,12 @@ this.dualSlotBaseTypes = new Set(['body/badge', 'grapple/hook']);
 class Player {
   static usedPlayerNames = new Set();
 
-  // --- MODIFICATION: Accepts globalModelFactory now ---
-  constructor(scene, globalModelFactory, initialConfig = {}) {
-    const { initialItems = {}, colors = {}, userInput = undefined } = initialConfig;
+  constructor(scene, itemsList, initialConfig = {}) {
+    const { initialItems = {}, colors = {}, userInput = undefined, globalFallbackAnchors = {} } = initialConfig;
 
     this.scene = scene;
     this.userInput = Player._validatePlayerName(userInput);
-
-    // --- Use the single global factory ---
-    this.modelFactory = globalModelFactory;
-    this.itemsList = this.modelFactory.itemsList; 
-    this.defaults = this.modelFactory.defaults;
-    this.globalFallbackAnchors = this.modelFactory.globalFallbackAnchors;
-    // --- END MODIFICATION ---
+    this.itemsList = itemsList;
 
     this.root = new THREE.Group();
     this.root.name = this.userInput;
@@ -182,7 +175,8 @@ class Player {
     this.pendingAttachments = {};
     this.skeleton = null;
 
-    // --- REMOVED: this.modelFactory = new PlayerModelFactory(...) ---
+    this.modelFactory = new PlayerModelFactory(this.itemsList, globalFallbackAnchors);
+    this.defaults = this.modelFactory.defaults;
 
     this.scene.userData[this.userInput] = {
       primary_color: colors.primary || new THREE.Color(0x00ff00),
@@ -190,7 +184,7 @@ class Player {
       playerInstance: this,
     };
 
-    // --- REMOVED: this.globalFallbackAnchors = this.modelFactory.globalFallbackAnchors; ---
+    this.globalFallbackAnchors = this.modelFactory.globalFallbackAnchors;
 
     this.ready = this.initializePlayer(initialItems);
   }
@@ -496,4 +490,4 @@ refreshModel(model) {
 window.Player = Player;
 window.PlayerModelFactory = PlayerModelFactory;
 
-window.MeshUtils = MeshUtils;
+window.MeshUtils = MeshUtils; 

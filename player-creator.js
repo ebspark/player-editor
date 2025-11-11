@@ -382,6 +382,16 @@ const playerCreator = {
             
             let player = new Player(scene, window.globalModelFactory, finalConfig);
             await player.ready;
+            
+            // --- ADD TO HISTORY ---
+            if (typeof history !== 'undefined' && typeof AddCommand !== 'undefined') {
+                history.execute(new AddCommand(player.root, scene));
+            } else {
+                // Fallback if history system isn't loaded
+                scene.add(player.root);
+            }
+            // --- END ---
+            
             transformControls.attach(player.root);
         }
 
@@ -466,3 +476,5 @@ window.createPlayer = createPlayer;
 window.closeCreatePlayerPopup = closeCreatePlayerPopup;
 window.editSelectedPlayer = editSelectedPlayer;
 window.filterPlayerItems = filterPlayerItems;
+
+window.playerCreator = playerCreator;
