@@ -381,10 +381,10 @@ function initScene() {
                 vec4 neighborW = texture2D(tSelectionMask, vUv - vec2(texelSize.x, 0.0));
 
                 // If neighbor color is different, this is an edge
-                if (distance(ownMaskColor, neighborN) > 0.1) isEdge = 1.0;
-                if (distance(ownMaskColor, neighborS) > 0.1) isEdge = 1.0;
-                if (distance(ownMaskColor, neighborE) > 0.1) isEdge = 1.0;
-                if (distance(ownMaskColor, neighborW) > 0.1) isEdge = 1.0;
+                if (distance(ownMaskColor, neighborN) > 0.001) isEdge = 1.0;
+                if (distance(ownMaskColor, neighborS) > 0.001) isEdge = 1.0;
+                if (distance(ownMaskColor, neighborE) > 0.001) isEdge = 1.0;
+                if (distance(ownMaskColor, neighborW) > 0.001) isEdge = 1.0;
 
                 if (isEdge > 0.5) {
                     gl_FragColor = vec4(uOutlineColor, 1.0); // Draw outline
@@ -734,7 +734,6 @@ const jsonControls = document.getElementById('json-controls'); // <-- NEW
         event.preventDefault(); 
         horizontalScroller.scrollBy({
             left: event.deltaY*4, // Scroll horizontally on vertical wheel
-            behavior: 'smooth'
         });
     });
 
@@ -1773,3 +1772,15 @@ window.globalModelFactory = new window.PlayerModelFactory(window.shopItems);
   // Load the default player
   await spawnDefaultPlayer();
 })();
+
+// Catch normal JS errors
+window.onerror = function (msg, url, line, col, error) {
+    alert("❌ Error: " + msg + "\nLine: " + line + ":" + col);
+    console.error("❌ JS Error:", msg, url, line, col, error);
+};
+
+// Catch errors inside async loaders / Promises (like glTF loader)
+window.addEventListener("unhandledrejection", function (event) {
+    alert("❌ Promise Error: " + event.reason);
+    console.error("❌ Unhandled Promise Rejection:", event.reason);
+});
