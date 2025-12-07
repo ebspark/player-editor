@@ -10,6 +10,15 @@ window.updateJsonEditorContent = (selectedObjects = []) => {
     return;
   }
 
+  // === FIX START: Clear error overlay immediately when selection changes ===
+  // This ensures that if you click off an object with an error and come back,
+  // or switch to a new object, the stale error message is removed.
+  const errorOverlay = document.getElementById('json-error-overlay');
+  if (errorOverlay) {
+    errorOverlay.style.display = 'none';
+  }
+  // === FIX END ===
+
   try {
     const dataToShow = {};
     const fallbackTemplate = { title: "", type: "" };
@@ -160,7 +169,11 @@ function updateExternalObject() {
     try {
         newData = JSON.parse(jsonEditor.getValue());
         
-        document.getElementById('json-error-overlay').style.display = 'none';
+        // === FIX: Ensure error clears on valid input ===
+        const errorEl = document.getElementById('json-error-overlay');
+        if (errorEl) errorEl.style.display = 'none';
+        // === END FIX ===
+
     } catch (e) {
         
         const errorEl = document.getElementById('json-error-overlay');
@@ -347,6 +360,9 @@ require(["vs/editor/editor.main"], function () {
             const currentEditorValue = JSON.parse(jsonEditor.getValue());
             if (JSON.stringify(currentEditorValue) !== JSON.stringify(activeJson)) {
                 updateExternalObject();
+            } else {
+                 // Even if content is logically same, valid parse should hide error
+                 document.getElementById('json-error-overlay').style.display = 'none';
             }
         } catch (e) {
             // Error will be handled by updateExternalObject if user stops typing
@@ -354,4 +370,16 @@ require(["vs/editor/editor.main"], function () {
         }
     }, 300);
   });
+});
+
+document.addEventListener('mousedown', (e) => {
+    // Check if the click happened inside the canvas container
+    if (e.target.closest('#canvas-container')) {
+        // If the active element is the editor, force it to blur
+        if (document.activeElement && 
+           (document.activeElement.classList.contains('inputarea') || 
+            document.activeElement.closest('.monaco-editor'))) {
+            document.activeElement.blur();
+        }
+    }
 });

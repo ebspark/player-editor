@@ -1,6 +1,8 @@
 // ===============================================
 // MeshUtils.js (Fixed)
-// JSON-driven attachment resolution + layered overrides
+// 1. JSON-driven attachment resolution
+// 2. Added "Original Material" restoration logic
+// 3. FIXED: Prevent parent material edits from bleeding into child items
 // ===============================================
 
 export const MeshUtils = {
@@ -16,16 +18,12 @@ export const MeshUtils = {
     "body/badge/right": { position: [0.134673, -0.267122, -0.088314], rotation: [-15.5, -1.24, 0.0] }
   },
 
-  /**
-   * Apply transform {position:[x,y,z], rotation:[deg,deg,deg], scale:num_or_[x,y,z]}
-   * This now correctly handles scale as either a float (multiplyScalar) or an array (set).
-   */
   applyTransform(object3D, grabTransform = {}) {
     if (!grabTransform) return;
 
     object3D.position.set(0, 0, 0);
     object3D.rotation.set(0, 0, 0);
-    object3D.scale.set(1, 1, 1); // <--- Reset scale
+    object3D.scale.set(1, 1, 1); 
 
     if (grabTransform.position) {
       object3D.position.set(...grabTransform.position);
@@ -36,16 +34,14 @@ export const MeshUtils = {
       object3D.rotation.set(radians[1], radians[0], radians[2], 'YXZ');
     }
 
-    // --- MODIFIED to handle float or array ---
     if (grabTransform.scale !== undefined && grabTransform.scale !== null) {
       const s = grabTransform.scale;
       if (typeof s === 'number') {
-        object3D.scale.multiplyScalar(s); // Use multiplyScalar for floats
+        object3D.scale.multiplyScalar(s); 
       } else if (Array.isArray(s)) {
-        object3D.scale.set(...s); // Use set for arrays
+        object3D.scale.set(...s); 
       }
     }
-    // --- END MODIFICATION ---
 
     object3D.updateMatrixWorld(true);
   },
@@ -59,12 +55,25 @@ export const MeshUtils = {
     return def;
   },
 
+  // === HELPER: Check if a mesh belongs to the current group or a child item ===
+  _isMeshOwnedByGroup(mesh, group) {
+      let parent = mesh.parent;
+      while (parent && parent !== group) {
+          // If we hit an object that is an item (and not the root group), 
+          // then this mesh belongs to that child item.
+          if (parent.userData.isItem) return false;
+          parent = parent.parent;
+      }
+      return true;
+  },
+
   applyMaterialIndices(group, itemConfig) {
     if (!itemConfig.materials) return;
 
     const meshes = [];
     group.traverse(child => {
-      if (child.isMesh) {
+      // === FIX: Only collect meshes owned by THIS group, not child items ===
+      if (child.isMesh && this._isMeshOwnedByGroup(child, group)) {
         meshes.push(child);
       }
     });
@@ -80,6 +89,8 @@ export const MeshUtils = {
 
   applyPlayerColors(group, itemConfig, primaryColor, secondaryColor) {
     const colorMap = {
+      default: () => null, 
+      
       default_color: (index) => {
         const materialConf = itemConfig.materials?.[index];
         if (materialConf && Array.isArray(materialConf.diffuseColor)) {
@@ -96,14 +107,24 @@ export const MeshUtils = {
     };
 
     group.traverse((obj) => {
+      // === FIX: Verify ownership before applying colors ===
+      if (!this._isMeshOwnedByGroup(obj, group)) return;
+
       if (obj.isMesh && colorMap[obj.name] && obj.userData.materialIndex !== undefined) {
+        
+        if (!obj.userData.originalMaterial) {
+            obj.userData.originalMaterial = obj.material;
+        }
+
         const color = colorMap[obj.name](obj.userData.materialIndex);
 
         if (color) {
-          if (!obj.material.isMaterial) {
-            obj.material = new THREE.MeshStandardMaterial();
+          if (obj.material === obj.userData.originalMaterial) {
+             obj.material = new THREE.MeshStandardMaterial();
           }
           obj.material.color.set(color);
+        } else {
+            obj.material = obj.userData.originalMaterial;
         }
       }
     });
@@ -112,7 +133,8 @@ export const MeshUtils = {
   halfColor(color) {
     return color.clone().multiplyScalar(0.5);
   },
-getSlotPath(childType, childConfig) {
+
+  getSlotPath(childType, childConfig) {
     const typeParts = childType.split('/');
     let slotPath;
 
@@ -120,109 +142,64 @@ getSlotPath(childType, childConfig) {
         const side = typeParts.pop();
         slotPath = `rope/${side}/end`;
     } else if (childType === 'checkpoint') {
-        slotPath = 'checkpoint'; // Special case
+        slotPath = 'checkpoint'; 
     } else {
         const parentType = typeParts[0];
         const sub = typeParts.slice(1).join('/');
-        slotPath = `${parentType}/${sub}`; // e.g. 'head/hat', 'body/badge/left'
+        slotPath = `${parentType}/${sub}`; 
         if (childConfig && childConfig.attachment_point) {
-            slotPath = `${parentType}/${typeParts[1]}/${childConfig.attachment_point}`; // e.g. 'head/glasses/mouth'
+            slotPath = `${parentType}/${typeParts[1]}/${childConfig.attachment_point}`; 
         }
     }
     return slotPath;
   },
-  // Create empty Objects as sockets for editor visualization
+
   createAttachmentSockets(modelGroup, itemConfig) {
     if (!itemConfig || !itemConfig.attachment_points) return;
 
-    const ensurePath = (root, path) => {
-      const parts = path.split('/');
-      let cur = root;
-      for (const p of parts) {
-        let child = cur.children.find(c => c.name === p && c.userData && c.userData.isSocket);
-        if (!child) {
-          child = new THREE.Object3D();
-          child.name = p;
-          child.userData.isSocket = true;
-          cur.add(child);
-        }
-        cur = child;
-      }
-      return cur;
-    };
-    
-
-    // --- MODIFICATION: This logic now handles flat keys like "glasses/mouth" ---
-    // The attachment_points object is flat, so we iterate its keys directly.
     Object.entries(itemConfig.attachment_points).forEach(([key, val]) => {
-      // key is "hat", "glasses", or "glasses/mouth"
       if (val && typeof val === 'object' && (val.position || val.rotation || val.scale)) {
-        
-        // We won't use ensurePath as it creates nested objects (e.g., glasses > mouth)
-        // We will create a single socket object with the flat key as its name.
         let socket = modelGroup.children.find(c => c.name === key && c.userData && c.userData.isSocket);
         if (!socket) {
             socket = new THREE.Object3D();
-            socket.name = key; // name is "hat" or "glasses/mouth"
+            socket.name = key; 
             socket.userData.isSocket = true;
             modelGroup.add(socket);
         }
-        // Apply the transform to this single socket
         this.applyTransform(socket, val);
       }
-      // We don't need a recursive 'walk' or 'else if' because attachment_points is flat.
     });
-    // --- END MODIFICATION ---
   },
 
-  /**
-   * Resolve attachment transform with proper layering:
-   * 1. Child's attachment_point_overrides[parentId] (highest priority)
-   * 2. Parent's attachment_points[slotName]
-   * 3. Global fallback anchors
-   * 4. DEFAULT_ATTACHMENT_TRANSFORMS (lowest priority)
-   *
-   * This no longer normalizes scale, passing floats or arrays directly to applyTransform.
-   */
   resolveAttachmentTransform({
-    parentConfig,              // equipped base item config (may have attachment_points)
-    childConfig,               // child item config (may have attachment_point_overrides)
-    parentId,                  // e.g. "head_rotation_2024_knight"
-    slotPath,                  // e.g. "head/hat", "body/badge/left"
-    globalFallbackAnchors      // object mapping slotPath -> {pos/rot/scale}
+    parentConfig,              
+    childConfig,               
+    parentId,                  
+    slotPath,                  
+    globalFallbackAnchors      
   }) {
     const pick = (obj) => (obj && typeof obj === 'object' ? obj : null);
 
-    // Extract the slot name from the path (e.g., "hat", "glasses/mouth")
     const getSlotName = (path) => {
       const parts = path.split('/');
-      return parts.slice(1).join('/'); // Remove first part (parent type)
+      return parts.slice(1).join('/'); 
     };
 
-    // --- 1) From child's attachment_point_overrides (HIGHEST PRIORITY)
     const getFromChildOverride = () => {
       if (!childConfig || !childConfig.attachment_point_overrides) return null;
       return pick(childConfig.attachment_point_overrides[parentId]);
     };
 
-    // --- 2) From parent's attachment_points
     const getFromParentAnchors = () => {
       if (!parentConfig || !parentConfig.attachment_points) return null;
-      const slotName = getSlotName(slotPath); // slotName will be "glasses/mouth"
+      const slotName = getSlotName(slotPath); 
       if (!slotName) return null;
-
-      // --- MODIFICATION ---
-      // The attachment_points object is flat, not nested.
-      // Look up the full slotName directly.
       const attachmentData = parentConfig.attachment_points[slotName];
       return pick(attachmentData);
-      // --- END MODIFICATION ---
     };
 
-    // --- 3) From global fallback JSON
     const getFromGlobalFallback = () => pick(globalFallbackAnchors && globalFallbackAnchors[slotPath]);
 
-    // --- 4) From hardcoded defaults (LOWEST PRIORITY)
     const getFromDefaultAttachment = () => pick(MeshUtils.DEFAULT_ATTACHMENT_TRANSFORMS[slotPath]);
 
     const overrideLayer = getFromChildOverride();
@@ -230,47 +207,30 @@ getSlotPath(childType, childConfig) {
     const globalLayer = getFromGlobalFallback();
     const defaultLayer = getFromDefaultAttachment();
 
-    // Merge fields with priority: override > parent > global > default
     const mergeField = (field, def) => {
-      // Check each layer in priority order
-      if (overrideLayer && overrideLayer[field] !== undefined) {
-        return overrideLayer[field];
-      }
-      if (parentLayer && parentLayer[field] !== undefined) {
-        return parentLayer[field];
-      }
-      if (globalLayer && globalLayer[field] !== undefined) {
-        return globalLayer[field];
-      }
-      if (defaultLayer && defaultLayer[field] !== undefined) {
-        return defaultLayer[field];
-      }
+      if (overrideLayer && overrideLayer[field] !== undefined) return overrideLayer[field];
+      if (parentLayer && parentLayer[field] !== undefined) return parentLayer[field];
+      if (globalLayer && globalLayer[field] !== undefined) return globalLayer[field];
+      if (defaultLayer && defaultLayer[field] !== undefined) return defaultLayer[field];
       return def;
     };
 
-    // --- MODIFIED ---
-    // Removed normalizeScale. We now default to 1.0 (float) and let
-    // applyTransform handle either the float or an array from the config.
     const finalTransform = {
       position: mergeField('position', [0, 0, 0]),
       rotation: mergeField('rotation', [0, 0, 0]),
-      scale: mergeField('scale', 1.0) // Default to float 1.0
+      scale: mergeField('scale', 1.0) 
     };
-    // --- END MODIFICATION ---
 
     return finalTransform;
   },
 
   getAttachmentTransform(childConfig, parentModel, slotPath, parentConfig, globalFallbackAnchors) {
-    // Get the parent's actual item ID/name for override lookup
     const parentId = parentConfig && parentConfig.name
       ? parentConfig.name
       : (parentModel && parentModel.name)
       ? parentModel.name
       : null;
 
-    // The 'resolveAttachmentTransform' function already correctly computes
-    // the final local transform by layering overrides > parent anchors > globals > defaults.
     const finalTransform = this.resolveAttachmentTransform({
       parentConfig,
       childConfig,

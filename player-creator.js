@@ -340,17 +340,15 @@ const playerCreator = {
     async onDone() {
         const equippedItems = {};
         
-        
+        // Loop to build equipped items list
         for (const itemType in this.previewPlayer.activeModels) {
             const model = this.previewPlayer.activeModels[itemType];
             const itemId = model.name;
-            
             
             const defaultConfig = this.previewPlayer.defaults[itemType];
             if (defaultConfig && itemId === itemType) {
                 continue; 
             }
-            
             equippedItems[itemType] = itemId;
         }
 
@@ -366,11 +364,16 @@ const playerCreator = {
 
         if (this.targetPlayer) {
             
+            if (window.ungroupAndDeselect) {
+                window.ungroupAndDeselect(); 
+            } else if (typeof transformControls !== 'undefined') {
+                transformControls.detach();
+            }
+
             const player = this.targetPlayer;
             player.scene.userData[player.userInput].primary_color.set(finalConfig.colors.primary);
             player.scene.userData[player.userInput].secondary_color.set(finalConfig.colors.secondary);
 
-            
             (async () => {
                 const currentTypes = Object.keys(player.activeModels);
                 for (const type of currentTypes) {
@@ -379,23 +382,18 @@ const playerCreator = {
                 await player.initializePlayer(finalConfig.initialItems);
             })();
         } else {
-            
+            // ... (New player creation logic) ...
             let player = new Player(scene, window.globalModelFactory, finalConfig);
             await player.ready;
             
-            // --- ADD TO HISTORY ---
             if (typeof history !== 'undefined' && typeof AddCommand !== 'undefined') {
                 history.execute(new AddCommand(player.root, scene));
             } else {
-                // Fallback if history system isn't loaded
                 scene.add(player.root);
             }
-            // --- END ---
             
             transformControls.attach(player.root);
         }
-
-
 
         this.close();
     },

@@ -149,93 +149,52 @@
 
     <div id="attachmentOverlay" class="attachment-overlay">
         <div class="attachment-popup">
-            <h2>Attachment Setup</h2>
-            <div class="form-group">
-                <label>Attachment Type:</label>
-                <input type="text" id="attachmentTypeInput" list="attachmentTypesList" class="form-control"
-                    placeholder="e.g., head/hat or body/jetpack" oninput="handleAttachmentTypeChange()">
-
-                <datalist id="attachmentTypesList">
-                    <option value="head/hat"></option>
-                    <option value="head/glasses"></option>
-                    <option value="head/glasses/mouth"></option>
-                    <option value="body/neck"></option>
-                    <option value="body/neck/chest"></option>
-                    <option value="body/backpack"></option>
-                    <option value="body/badge"></option>
-                    <option value="checkpoint"></option>
-                    <option value="grapple/hook"></option>
-                    <option value="head"></option>
-                    <option value="body"></option>
-                    <option value="hand"></option>
-                </datalist>
-            </div>
-            <div class="form-group">
-                <label>Attachment Point (Optional):</label>
-                <input type="text" id="attachmentPointInput" class="form-control"
-                    placeholder="e.g., mouth (for head/glasses)" oninput="liveUpdateCustomTypePreview()">
-            </div>
-            <div id="dualItemSelection" class="form-group" style="display: none; background: #3a3a3a; padding: 10px; border-radius: 6px;">
-                <label for="attachmentDualItem" style="display: flex; align-items: center; cursor: pointer;">
-                    <input type="checkbox" id="attachmentDualItem" onchange="handleAttachmentTypeChange()" style="width: 20px; height: 20px; margin-right: 10px;">
-                    Is this a "Dual Item"? (e.g., Badge)
-                </label>
-                <p style="font-size: 12px; color: #ccc; margin-top: 5px;">
-                    Check this if the item can be equipped to a 'left' OR 'right' slot (like body/badge). Do not check for 'hand' items.
-                </p>
+            <h2>Cosmetic Uploader</h2>
+            
+            <div id="uploadQueueStatus" style="margin-bottom: 15px; color: #aaa; font-size: 13px; display:none;">
+                Processing file <span id="queueCurrent" style="color:#fff;">1</span> of <span id="queueTotal" style="color:#fff;">5</span>
             </div>
 
-            <div id="sideSelection" class="form-group" style="display: none;">
-                <label>Side:</label>
-                <select id="attachmentSide" class="form-control" onchange="handleAttachmentTypeChange()">
-                    <option value="none">-- none -- </option>
-                    <option value="left">Left</option>
-                    <option value="right">Right</option>
+            <div class="form-group">
+                <label>Item Type:</label>
+                <select id="attachmentTypeSelect" class="form-control" onchange="updateItemKey()">
+                    <option value="" disabled selected>Select a type...</option>
+                    <optgroup label="Base Types">
+                        <option value="head">Head Base</option>
+                        <option value="body">Body Base</option>
+                    </optgroup>
+                    <optgroup label="Head">
+                        <option value="head/hat">Hat (head/hat)</option>
+                        <option value="head/glasses">Glasses (head/glasses)</option>
+                        <option value="head/glasses/mouth">Mouth (head/glasses/mouth)</option>
+                    </optgroup>
+                    <optgroup label="Body">
+                        <option value="body/backpack">Backpack (body/backpack)</option>
+                        <option value="body/neck">Neck (body/neck)</option>
+                        <option value="body/neck/chest">Chest (body/neck/chest)</option>
+                        <option value="body/badge">Badge (body/badge)</option>
+                        <option value="body/lower">Lower Body (body/lower)</option>
+                    </optgroup>
+                    <optgroup label="Hands & Ropes">
+                        <option value="hand">hand (hand)</option>
+                        <option value="grapple/hook">Grapple (grapple/hook)</option>
+                    </optgroup>
                 </select>
             </div>
 
-            <div id="customTypeSetup" class="form-group"
-                style="display: none; background: #333; padding: 10px; border-radius: 6px;">
-                <label style="color: #55aaff; font-weight: bold;">New Attachment Type Setup (Live Preview)</label>
-                <p style="font-size: 12px; color: #ccc; margin-bottom: 10px;">A preview mannequin will appear. Tweak
-                    values to position the item.</p>
-
-                <label style="font-size: 13px; margin-top: 5px;">Position (X, Y, Z)</label>
-                <div style="display: flex; gap: 5px;">
-                    <input type="number" id="customTypePosX" class="form-control" value="0"
-                        oninput="liveUpdateCustomTypePreview()">
-                    <input type="number" id="customTypePosY" class="form-control" value="0"
-                        oninput="liveUpdateCustomTypePreview()">
-                    <input type="number" id="customTypePosZ" class="form-control" value="0"
-                        oninput="liveUpdateCustomTypePreview()">
-                </div>
-
-                <label style="font-size: 13px; margin-top: 5px;">Rotation (Y, X, Z - Yaw, Pitch, Roll)</label>
-                <div style="display: flex; gap: 5px;">
-                    <input type="number" id="customTypeRotY" class="form-control" value="0"
-                        oninput="liveUpdateCustomTypePreview()">
-                    <input type="number" id="customTypeRotX" class="form-control" value="0"
-                        oninput="liveUpdateCustomTypePreview()">
-                    <input type="number" id="customTypeRotZ" class="form-control" value="0"
-                        oninput="liveUpdateCustomTypePreview()">
-                </div>
-
-                <label style="font-size: 13px; margin-top: 5px;">Scale</label>
-                <input type="number" id="customTypeScale" class="form-control" value="1"
-                    oninput="liveUpdateCustomTypePreview()">
-            </div>
             <div class="form-group">
-                <label>Model Name:</label>
-                <input type="text" id="modelName" class="form-control" placeholder="Auto-generated name">
+                <label>Item Key (Auto-generated):</label>
+                <input type="text" id="itemKey" class="form-control" placeholder="head_hat_filename_2025">
             </div>
 
             <div class="button-group">
-                <button id="uploadButton" class="btn btn-primary">Upload Cosmetic</button>
-                <button id="nextButton" class="btn btn-secondary">Next</button>
-                <button id="doneButton" class="btn btn-success">Done</button>
+                <button id="uploadButton" class="btn btn-primary">Select Files...</button>
+                
+                <button id="cancelButton" class="btn btn-secondary">Cancel</button>
+                <button id="nextButton" class="btn btn-success" style="display:none;">Next Item</button>
             </div>
 
-            <input type="file" id="modelUpload" hidden accept=".sgm" />
+            <input type="file" id="modelUpload" hidden multiple accept=".sgm" />
         </div>
     </div>
 
